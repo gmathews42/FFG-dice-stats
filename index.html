@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+    
+    <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <title>FFG Die Stats Calculator</title>
+    
+        <style>
+            .inputs {
+                border: 2px outset black;
+                background-color: lightblue;
+                text-align: left;
+                padding: 5px;
+                float:left;
+            }
+            
+            .full-width {
+                display:flex;
+                width:100%;
+                float:left;
+            }
+        
+            /* The Modal (background) */
+            .modal {
+                display: none; /* Hidden by default */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Sit on top */
+                left: 0;
+                top: 0;
+                width: 100%; /* Full width */
+                height: 100%; /* Full height */
+                overflow: auto; /* Enable scroll if needed */
+                background-color: rgb(0,0,0); /* Fallback color */
+                background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            }
+
+            /* Modal Content/Box */
+            .modal-content {
+                background-color: #fefefe;
+                margin: 15% auto; /* 15% from the top and centered */
+                padding: 20px;
+                border: 1px solid #888;
+                width: 80%; /* Could be more or less, depending on screen size */
+            }
+
+            /* The Close Button */
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+        
+        </style>
+    
+        <!-- Plotly for plotting, MIT license -->
+        <script src="https://cdn.plot.ly/plotly-latest.min.js">
+        </script>       
+   
+        <!-- Math.js, Apache 2.0 license -->
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.1.0/math.min.js"> -->
+        <script src="https://pagecdn.io/lib/mathjs/7.1.0/math.min.js">
+        </script>  
+    
+    </head>
+
+    <body style="font-family:sans-serif; font-size:15px; width:700px; margin-left:auto; margin-right:auto;">
+
+        <div id="headerPanel" class="full-width">
+            <h3> FFG Die Stats Calculator</h3>
+        </div>
+
+      <div id="controlBar" class="full-width">
+            
+            <div id="poolSelector" class="inputs">
+                Pool selection <br><br>
+                
+                Green <input type="text" id="nGdisplay" size="3" value=3 readonly="true"> <br> <input id="nG" type ="range" min="0" max="6" step="1" value=3  oninput="updatePool()">   <br>
+                
+                Yellow <input type="text" id="nYdisplay" size="3" value=0 readonly="true"> <br><input id="nY" type ="range" min="0" max="6" step="1" value=0 oninput="updatePool()">   <br>
+                
+                Blue <input type="text" id="nBdisplay" size="3" value=0 readonly="true"> <br><input id="nB" type ="range" min="0" max="6" step="1" value=0 oninput="updatePool()">   <br>
+                
+                Purple <input type="text" id="nPdisplay" size="3" value=2 readonly="true">  <br><input id="nP" type ="range" min="0" max="6" step="1" value=2 oninput="updatePool()">  <br>
+                
+                Red <input type="text" id="nRdisplay" size="3" value=0 readonly="true"><br> <input id="nR" type ="range" min="0" max="6" step="1" value=0 oninput="updatePool()">   <br>
+                
+                Black <input type="text" id="nKdisplay" size="3" value=0 readonly="true"> <br><input id="nK" type ="range" min="0" max="6" step="1" value=0 oninput="updatePool()">   <br>
+
+                 <button onclick="calculateGrid()">Calculate odds</button> 
+            </div>
+            
+            <div id="addResults" class="inputs">
+                Add to results: <br><br>
+                
+                Success <input type="text" id="addSucdisplay" size="3" value=0 readonly="true"> <br> <input id="addSuc" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> <br>
+                
+                Failure <input type="text" id="addFaildisplay" size="3" value=0 readonly="true"> <br> <input id="addFail" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> <br>
+
+                Advantage <input type="text" id="addAdvdisplay" size="3" value=0 readonly="true"> <br> <input id="addAdv" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> <br>
+
+                Threat <input type="text" id="addThreatdisplay" size="3" value=0 readonly="true"> <br> <input id="addThreat" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> <br>
+
+                Triumph <input type="text" id="addTriumphdisplay" size="3" value=0 readonly="true"> <br> <input id="addTriumph" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> <br>
+                
+                Despair <input type="text" id="addDespairdisplay" size="3" value=0 readonly="true"> <br> <input id="addDespair" type ="range" min="-5" max="5" step="1" value=0 oninput="updateAdditions()"> 
+                  <br>
+           </div>
+
+            <div id="targetsSelector" class="inputs">
+                Target outcomes: <br>
+                
+                <input type="checkbox" id="targSuc" value="Success / Failure" onclick="updateTargets();" checked>
+                <input id="nSuc" type ="range" min="-5" max="5" step="1" value=1 oninput="updateTargets()"> 
+                <input type="text" id="nSucdisplay" size="3" value=1 readonly="true"> Success / Failure <br>
+                
+                <input type="checkbox" id="targAdv" value="Advantage / Threat" onclick="updateTargets();">
+                <input id="nAdv" type ="range" min="-6" max="6" step="1" value=0 oninput="updateTargets()"> 
+                <input type="text" id="nAdvdisplay" size="3" value=0 readonly="true"> Advantage / Threat <br>
+                
+                <input type="checkbox" id="targTriumph" value="Triumph" onclick="updateTargets();">
+                <input id="nTriumph" type ="range" min="0" max="6" step="1" value=0 oninput="updateTargets()"> 
+                <input type="text" id="nTriumphdisplay" size="3" value=0 readonly="true"> Triumph <br>
+                
+                <input type="checkbox" id="targDespair" value="Despair" onclick="updateTargets();">
+                <input id="nDespair" type ="range" min="0" max="6" step="1" value=0 oninput="updateTargets()"> 
+                <input type="text" id="nDespairdisplay" size="3" value=0 readonly="true"> Despair <br>
+                
+                 <button onclick="calculateGrid()">Calculate odds</button> <br>
+                <input type="text" id="oddsDisplay" size="4" value=0 readonly="true"> % <br>
+           </div>
+          
+        </div>
+        
+        <div id="rollBar" class="full-width">
+            <button onclick="var results = rollPool(diePool); calculateOutcome(results)">Roll once</button>  &nbsp;&nbsp;&nbsp;
+            <input type="text" id="succDisplay" size="3" value=0 readonly="true"> success &nbsp;&nbsp;&nbsp;
+            <input type="text" id="advDisplay" size="3" value=0 readonly="true"> advantage &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="triDisplay" size="3" value=0 readonly="true"> triumph &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="failDisplay" size="3" value=0 readonly="true"> failure &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="threatDisplay" size="3" value=0 readonly="true"> threat &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="despairDisplay" size="3" value=0 readonly="true"> despair
+        </div>
+        
+        <div id="outcomeBar" class="full-width">         
+            NET OUTCOME: &nbsp;&nbsp;&nbsp;
+            <input type="text" id="succNet" size="3" value=0 readonly="true"> success / failure &nbsp;&nbsp;&nbsp;
+            <input type="text" id="advNet" size="3" value=0 readonly="true"> advantage / threat &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="triNet" size="3" value=0 readonly="true"> triumph &nbsp;&nbsp;&nbsp;   
+            <input type="text" id="despairNet" size="3" value=0 readonly="true"> despair             
+        </div>
+
+        <div id="resultsPlot" class="full-width" style="width:500px;height:500px;">
+        </div>
+
+      
+    
+  
+        <div id="explanatoryText" class="full-width">
+            
+            <p> This is is a calculator of the odds of different outcomes for dice pools in the Fantasy Flight Games Roleplaying Games.  
+            
+            <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+    
+        </div>
+
+    
+        <script>
+            
+            //console.log(math.size([0, 1, 2, 3]));         
+            var dieTypes = [[math.zeros(6),
+                             math.matrix([1,0,0,0,0,0]),
+                             math.matrix([1,0,0,0,0,0]),
+                             math.matrix([2,0,0,0,0,0]),
+                             math.matrix([0,1,0,0,0,0]),
+                             math.matrix([0,1,0,0,0,0]),
+                             math.matrix([1,1,0,0,0,0]),
+                             math.matrix([0,2,0,0,0,0])],
+                            [math.zeros(6),
+                             math.matrix([1,0,0,0,0,0]),
+                             math.matrix([1,0,0,0,0,0]),
+                             math.matrix([2,0,0,0,0,0]),
+                             math.matrix([2,0,0,0,0,0]),
+                             math.matrix([0,1,0,0,0,0]),
+                             math.matrix([1,1,0,0,0,0]),
+                             math.matrix([1,1,0,0,0,0]),
+                             math.matrix([1,1,0,0,0,0]),
+                             math.matrix([0,2,0,0,0,0]),
+                             math.matrix([0,2,0,0,0,0]),
+                             math.matrix([0,0,1,0,0,0])],
+                            [math.zeros(6),
+                             math.zeros(6),
+                             math.matrix([1,0,0,0,0,0]),
+                             math.matrix([1,1,0,0,0,0]),
+                             math.matrix([0,2,0,0,0,0]),
+                             math.matrix([0,1,0,0,0,0])],
+                            [math.zeros(6),
+                             math.matrix([0,0,0,1,0,0]),
+                             math.matrix([0,0,0,2,0,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,0,2,0]),
+                             math.matrix([0,0,0,1,1,0])],
+                            [math.zeros(6),
+                             math.matrix([0,0,0,1,0,0]),
+                             math.matrix([0,0,0,1,0,0]),
+                             math.matrix([0,0,0,2,0,0]),
+                             math.matrix([0,0,0,2,0,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,1,1,0]),
+                             math.matrix([0,0,0,1,1,0]),
+                             math.matrix([0,0,0,0,2,0]),
+                             math.matrix([0,0,0,0,2,0]),
+                             math.matrix([0,0,0,0,0,1])],
+                            [math.zeros(6),
+                             math.zeros(6),
+                             math.matrix([0,0,0,1,0,0]),
+                             math.matrix([0,0,0,1,0,0]),
+                             math.matrix([0,0,0,0,1,0]),
+                             math.matrix([0,0,0,0,1,0])]];
+            
+
+            var diePool = math.zeros(6); 
+            //console.log('die pool: ',diePool._data);
+            //console.log('number of dice: ', diePool._data.length);
+
+            var additions = math.zeros(6); 
+            //var results = math.zeros(6);
+            var targets = math.zeros(4);
+            var consider = [1,0,0,0];
+            
+            var nRolls = 3000;
+            var allOutcomes = math.zeros(nRolls,4);
+
+            var plotter = document.getElementById('resultsPlot');
+
+            updatePool();
+            calculateGrid();
+
+            function updatePool() {
+                diePool._data[0] = document.getElementById("nG").value;
+                document.getElementById("nGdisplay").value = document.getElementById("nG").value;
+                diePool._data[1] = document.getElementById("nY").value;
+                document.getElementById("nYdisplay").value = document.getElementById("nY").value;
+                diePool._data[2] = document.getElementById("nB").value;
+                document.getElementById("nBdisplay").value = document.getElementById("nB").value;
+                diePool._data[3] = document.getElementById("nP").value;
+                document.getElementById("nPdisplay").value = document.getElementById("nP").value;
+                diePool._data[4] = document.getElementById("nR").value;
+                document.getElementById("nRdisplay").value = document.getElementById("nR").value;
+                diePool._data[5] = document.getElementById("nK").value;
+                document.getElementById("nKdisplay").value = document.getElementById("nK").value;
+                //console.log('die pool: ', diePool._data);
+            }
+           
+            function updateAdditions() {
+                additions._data[0] = document.getElementById("addSuc").value;
+                document.getElementById("addSucdisplay").value = document.getElementById("addSuc").value;
+                
+                additions._data[1] = document.getElementById("addAdv").value;
+                document.getElementById("addAdvdisplay").value = document.getElementById("addAdv").value;
+                
+                additions._data[2] = document.getElementById("addTriumph").value;
+                document.getElementById("addTriumphdisplay").value = document.getElementById("addTriumph").value;
+                
+                additions._data[3] = document.getElementById("addFail").value;
+                document.getElementById("addFaildisplay").value = document.getElementById("addFail").value;
+                
+                additions._data[4] = document.getElementById("addThreat").value;
+                document.getElementById("addThreatdisplay").value = document.getElementById("addThreat").value;
+                
+                additions._data[5] = document.getElementById("addDespair").value;
+                document.getElementById("addDespairdisplay").value = document.getElementById("addDespair").value;
+                //console.log("additions: ", additions._data);
+            }
+                     
+            function updateTargets() {
+                targets._data[0] = document.getElementById("nSuc").value;
+                document.getElementById("nSucdisplay").value = document.getElementById("nSuc").value;
+                targets._data[1] = document.getElementById("nAdv").value;
+                document.getElementById("nAdvdisplay").value = document.getElementById("nAdv").value;
+                targets._data[2] = document.getElementById("nTriumph").value;
+                document.getElementById("nTriumphdisplay").value = document.getElementById("nTriumph").value;
+                targets._data[3] = document.getElementById("nDespair").value;
+                document.getElementById("nDespairdisplay").value = document.getElementById("nDespair").value;
+
+                if (document.getElementById("targSuc").checked == true) {consider[0] = 1} else {consider[0] = 0};
+                if (document.getElementById("targAdv").checked == true) {consider[1] = 1} else {consider[1] = 0};
+                if (document.getElementById("targTriumph").checked == true) {consider[2] = 1} else {consider[2] = 0};
+                if (document.getElementById("targDespair").checked == true) {consider[3] = 1} else {consider[3] = 0};
+                
+                countTarget();
+                //console.log('Targets: ', targets._data);
+            }
+
+            function rollPool(diePool) {
+                //console.log("Rolling pool...", diePool._data)
+                var results = math.zeros(6);
+                //console.log("number of die types: ", diePool._data.length);
+                //console.log("number of dice: ", math.sum(diePool));
+                for (var i=0; i < diePool._data.length; i++) {
+                    if (diePool._data[i] > 0) {
+                        //console.log('Rolling die type ',i);
+                        for (var j=0; j < diePool._data[i]; j++) {
+                            //console.log('roll number ',j);
+                            var die = dieTypes[i];
+                            var nFaces = die.length;
+                            var k = math.floor(math.random() * nFaces);
+                            //console.log('getting values for face ',k);
+                            //console.log('faces are: ',dieTypes[i]);
+                            var face = dieTypes[i][k];
+                            //console.log('values are ',face._data);
+                            results = math.add(results, face);
+                        }
+                    }
+                    
+                }
+                
+                // add any arbitrary results, but 
+                // make sure that any negatives do not take result type below 0
+                results = math.add(results, additions);
+                var tempMat = math.reshape(math.concat(results, math.zeros(6)), [2,6]);
+                //console.log(tempMat._data);
+                //console.log(math.column(tempMat,0)._data);
+                //console.log(math.max(tempMat,0)._data);
+                results = math.max(tempMat,0);
+
+                //console.log('# of dice: ', diePool._data.length, ' results: ', results._data);
+                document.getElementById("succDisplay").value = results._data[0];
+                document.getElementById("advDisplay").value = results._data[1];
+                document.getElementById("triDisplay").value = results._data[2];
+                document.getElementById("failDisplay").value = results._data[3];
+                document.getElementById("threatDisplay").value = results._data[4];
+                document.getElementById("despairDisplay").value = results._data[5];
+                
+                return results;
+            }
+            
+            function calculateOutcome(results) {
+                
+                var outcome = math.zeros(4);
+                outcome._data[0] = results._data[0] + results._data[2] - results._data[3] - results._data[5];
+                outcome._data[1] = results._data[1] - results._data[4];
+                outcome._data[2] = results._data[2];
+                outcome._data[3] = results._data[5];
+                //console.log('outcome calculated: ', outcome._data);
+                
+                 document.getElementById("succNet").value = outcome._data[0];
+                document.getElementById("advNet").value = outcome._data[1];
+                document.getElementById("triNet").value = outcome._data[2];
+                document.getElementById("despairNet").value = outcome._data[3];
+                
+                return outcome;
+            }
+                       
+            function doNothing() {
+                var z = 0;
+            }
+            
+            function calculateGrid() {
+                //console.log('Button pressed!');
+                // build dice pool
+                allOutcomes = math.zeros(nRolls,4);
+                
+                // roll dice n times
+                for (var i=0; i < nRolls; i++) {
+                    //console.log('roll: ',i);
+                    var result = rollPool(diePool);
+                    var outcome = calculateOutcome(result);
+                    //console.log(allOutcomes._data[i]);
+                    allOutcomes._data[i] = outcome._data;
+                    //console.log('outcome retrieved: ', outcome._data);
+                    //console.log('outcome pasted: ', allOutcomes._data[i]);
+                    //console.log('full outcomes array: ', allOutcomes._data);
+                }
+                //console.log(allOutcomes._data);
+                
+                // identify minimum & maximum for success and advantage axes
+                var limits = math.zeros(4,2);
+                //setTimeout(doNothing(),1000);
+                //console.log('initializing limits: ', limits._data);
+                
+                for (var i=0; i < 4; i++) {
+                    var col = math.column(allOutcomes,i);
+                    //console.log('column ',i);
+                    //console.log(col._data);
+                    //console.log('min and max: ', math.min(col), math.max(col));
+                    var rowLims = math.matrix([math.min(col), math.max(col)]);
+                    limits._data[i] = rowLims._data;
+                }
+                //console.log('outcome limits: ', limits);
+
+                var x = math.reshape(math.column(allOutcomes,0),[nRolls]);
+                //console.log('x: ',x);
+                var y = math.reshape(math.column(allOutcomes,1),[nRolls]);
+                //console.log('y: ',y);
+                
+                plotLayout = {
+                    //margin: { t: 30, l:xBase, r:50 },
+                    title: {
+                        text: 'Results of '+ nRolls + ' rolls',
+                        font: {
+                            family: 'Calibri, monospace',
+                            size: 22,
+                            color: 'black'
+                        },
+                        x: 20,
+                        y: 20
+                    },
+                    xaxis: {
+                        range: [-6, 6],
+                        fixedrange: true,
+                        title: {
+                            text: 'Failure <--> Success',
+                            font: {
+                                family: 'Calibri, monospace',
+                                size: 18,
+                                color: 'black'
+                            },
+                            standoff: 10
+                        },
+                    },
+                    yaxis: {
+                        range: [-6, 6],
+                        fixedrange: true,
+                        title: {
+                            text: 'Threat <--> Advantage',
+                            font: {
+                                family: 'Calibri, monospace',
+                                size: 18,
+                                color: 'black'
+                            }
+                        }
+                    }
+                };
+                var histOutcomes = {
+                        x: x._data,
+                        y: y._data,
+                        //histnorm: 'probability',
+                        type: 'histogram2d',
+                        autobinx: false,
+                        xbins: {
+                            start: -6,
+                            end: 6,
+                            size: 1
+                        },
+                        autobiny: false,
+                        ybins: {
+                            start: -6,
+                            end: 6,
+                            size: 1
+                        },
+                    };  
+                var showSuccess = {
+                    x: [1,1],
+                    y: [-6,6],
+                    mode: 'lines',
+                    line: {
+                      color: 'black',
+                      width: 2,
+                    }
+                };
+                var showAdvantage = {
+                    x: [-6,6],
+                    y: [1,1],
+                    mode: 'lines',
+                    line: {
+                      color: 'black',
+                      width: 2,
+                    }
+                };
+                var showThreat = {
+                    x: [-6,6],
+                    y: [0,0],
+                    mode: 'lines',
+                    line: {
+                      color: 'black',
+                      width: 2,
+                    }
+                };
+ 
+                
+                var data = [histOutcomes, showSuccess, showAdvantage, showThreat];
+                Plotly.newPlot(plotter, data, plotLayout);
+                
+                updateTargets();
+            }
+            
+            function countTarget() {
+                // uses allOutcomes and targets
+                // checkboxes: targSuc targAdv targTriumph targDespair
+                // sliders: nSuc nAdv nTriumph nDespair
+                
+                var matchSuc = math.ones(nRolls);
+                var matchAdv = math.ones(nRolls);
+                var matchTri = math.ones(nRolls);
+                var matchDes = math.ones(nRolls);
+                
+                if (consider[0] == 1) {
+                    var col = math.reshape(math.column(allOutcomes,0),[nRolls]);
+                    if (targets._data[0] > 0) {
+                        matchSuc = math.largerEq(col,targets._data[0]);
+                    } else {
+                        matchSuc = math.smallerEq(col,targets._data[0]);
+                    };
+                    //console.log(matchSuc);
+                    //console.log('percent matching success / fail: ', math.sum(matchSuc) / nRolls * 100, '%');
+                };
+                
+                if (consider[1] == 1) {
+                    var col = math.reshape(math.column(allOutcomes,1),[nRolls]);
+                    if (targets._data[1] > 0) {
+                        matchAdv = math.largerEq(col,targets._data[1]);
+                    } else if (targets._data[1] < 0) {
+                        matchAdv = math.smallerEq(col,targets._data[1]);
+                    } else {
+                        matchAdv = math.equal(col,targets._data[1]);
+                    };
+                    //console.log(matchAdv);
+                    //console.log('percent matching adv / threat: ', math.sum(matchAdv) / nRolls * 100, '%');
+                };
+                
+                if (consider[2] == 1) {
+                    var col = math.reshape(math.column(allOutcomes,2),[nRolls]);
+                    matchTri = math.equal(col,targets._data[2]);
+                    //console.log(matchTri);
+                    //console.log('percent matching triumph: ', math.sum(matchTri) / nRolls * 100, '%');
+                };
+                
+                if (consider[3] == 1) {
+                    var col = math.reshape(math.column(allOutcomes,3),[nRolls]);
+                    matchDes = math.equal(col,targets._data[3]);
+                    //console.log(matchTri);
+                    //console.log('percent matching despair: ', math.sum(matchDes) / nRolls * 100, '%');
+                };
+                
+                var percentMatch1 = math.dotMultiply(math.ones(nRolls),matchSuc);
+                var percentMatch2 = math.dotMultiply(math.ones(nRolls),matchAdv);
+                var percentMatch3 = math.dotMultiply(math.ones(nRolls),matchTri);
+                var percentMatch4 = math.dotMultiply(math.ones(nRolls),matchDes);
+                var percentMatch = math.dotMultiply(percentMatch1,percentMatch2);
+                percentMatch = math.dotMultiply(percentMatch,percentMatch3);
+                percentMatch = math.dotMultiply(percentMatch,percentMatch4);
+                //console.log('percent matching all conditions: ', math.sum(percentMatch) / nRolls * 100, '%');
+                document.getElementById("oddsDisplay").value = math.sum(percentMatch) / nRolls * 100;
+           }
+      
+   </script>
+
+    </body>
+</html>
